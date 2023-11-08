@@ -2,7 +2,9 @@ from django.shortcuts import render
 from .models import Post, Category
 from django.views.generic import ListView, DetailView
 
-# from blog.service.blog_service import ()  # service layer
+# from blog.service.blog_service import (
+#     post_list_service,
+# )  # service layer
 
 # Create your views here.
 class PostList(ListView):

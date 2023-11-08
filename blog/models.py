@@ -4,6 +4,17 @@ import os
 
 # Create your models here.
 
+class Tag(models.Model):
+    name = models.CharField(max_length=50)
+    slug = models.SlugField(max_length=200, unique=True, allow_unicode=True)
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return f'/blog/tag/{self.slug}/'
+
+
 class Category(models.Model):
     name = models.CharField(max_length=50, unique=True)
     slug = models.SlugField(max_length=200, unique=True, allow_unicode=True)
@@ -34,6 +45,8 @@ class Post(models.Model):
     author = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)  # 작성자가 삭제되면 해당 작성자가 작성한 포스트에 작성자를 빈 칸으로 둔다.
 
     category = models.ForeignKey(Category, null=True, blank=True, on_delete=models.SET_NULL)
+
+    tags = models.ManyToManyField(Tag, blank=True)  # ManyToManyField는 기본적으로 null=True가 설정되어 있어 따로 입력한 null=True는 효과가 없다.
 
     def __str__(self):
         return f'[{self.pk}] {self.title} :: {self.author}'
