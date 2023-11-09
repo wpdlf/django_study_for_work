@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, DetailView, CreateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 # LoginRequiredMixin : 장고에서 제공하는 클래스로 view.py에서 임포트하고 사용한다. 매개변수로 추가하면 로그인했을 때만 페이지가 보이게 된다.
 from .models import Post, Category, Tag
+from django.core.exceptions import PermissionDenied
 
 # from blog.service.blog_service import (
 #     post_list_service,
@@ -71,6 +72,19 @@ class PostCreate(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             return super(PostCreate, self).form_valid(form)  # CreateView의 기본 form_valid() 함수에 현재의 form을 인자로 보내 처리한다.
         else:
             return redirect('/blog/')  # 로그인 하지 않은 경우 /blog/ 경로로 리다이렉트
+
+
+class PostUpdate(LoginRequiredMixin, UpdateView):
+    model = Post
+    fields = ['title', 'hook_text', 'content', 'head_image', 'file_upload', 'category', 'tags']
+
+    template_name = 'blog/post_update_form.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and request.user == self.get_object().author:
+            return super(PostUpdate, self).dispatch(request, *args, **kwargs)
+        else:
+            raise PermissionDenied
 
 
 def category_page(request, slug):
