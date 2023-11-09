@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from markdownx.models import MarkdownxField
+from markdownx.utils import markdown
 import os
 
 # Create your models here.
@@ -48,6 +50,8 @@ class Post(models.Model):
 
     tags = models.ManyToManyField(Tag, blank=True)  # ManyToManyField는 기본적으로 null=True가 설정되어 있어 따로 입력한 null=True는 효과가 없다.
 
+    content = MarkdownxField()
+
     def __str__(self):
         return f'[{self.pk}] {self.title} :: {self.author}'
 
@@ -59,3 +63,6 @@ class Post(models.Model):
 
     def get_file_ext(self):
         return self.get_file_name().split('.')[-1]
+
+    def get_content_markdown(self):
+        return markdown(self.content)

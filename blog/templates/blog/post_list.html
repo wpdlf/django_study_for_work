@@ -36,7 +36,7 @@
                         {% if p.hook_text %}
                             <h5 class="text-muted">{{ p.hook_text }}</h5>
                         {% endif %}
-                        <p class="card-text">{{ p.content | truncatewords:45 }}</p>
+                        <p class="card-text">{{ p.get_content_markdown | truncatewords_html:45 | safe }}</p>
 
                         {% if p.tags.exists %}  <!-- tags 필드가 비어 있지 않으면 <Read More> 버튼 바로 위에 태그를 하나씩 출력한다. -->
                             <i class="fas fa-tags"></i>
