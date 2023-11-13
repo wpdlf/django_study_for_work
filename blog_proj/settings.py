@@ -58,7 +58,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',  # POST 요청에 대해 csrf token을 발급하고 체크한다. 사용자가 로그인 할 때마다 token값이 변경됨. view가 호출되기 전 csfrmiddlewaretoken 유효성 검증. POST 양식을 사용하는 템플릿에서 <form> 태그 안에 {% csrf_token %} 태그를 사용
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

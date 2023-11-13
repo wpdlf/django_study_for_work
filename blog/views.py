@@ -2,7 +2,9 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 # LoginRequiredMixin : 장고에서 제공하는 클래스로 view.py에서 임포트하고 사용한다. 매개변수로 추가하면 로그인했을 때만 페이지가 보이게 된다.
+from django.shortcuts import get_object_or_404
 from .models import Post, Category, Tag
+from .forms import CommentForm
 from django.core.exceptions import PermissionDenied
 from django.utils.text import slugify
 
@@ -43,6 +45,7 @@ class PostDetail(DetailView):
         context = super(PostDetail, self).get_context_data()  # 직속 부모 클래스의 메소드를 사용하기 위함
         context['categories'] = Category.objects.all()
         context['no_category_post_count'] = Post.objects.filter(category=None).count()
+        context['comment_form'] = CommentForm
 
         return context
 
@@ -176,3 +179,21 @@ def tag_page(request, slug):
             'no_category_post_count': Post.objects.filter(category=None).count(),  # no_category_post_count도 다음과 같이 추가한다.
         }
     )
+
+
+def new_comment(request, pk):
+    if request.user.is_authenticated:  # 로그인 하지 않은 상태에서는 댓글 폼이 보이지 않게 설정했지만 비정상적인 방법으로 new_comment로 접근하려는 시도를 대비해 로그인하지 않은 경우에는 PermissionDenied를 발생 시킨다.
+        post = get_object_or_404(Post, pk=pk)  # new_comment() 함수는 pk를 인자로 받는다.이 값으로 댓글을 달 포스트를 쿼리를 날려 가져온다. 물론 post = Post.objects.get(pk=pk)로 불러올 수도 있지만 해당하는  pk가 없는 경우에는 404오류를 발생시키도록 하기 위해 장고의 get_object_or_404()를 활용한다.
+
+        if request.method == 'POST':  # 폼을 작성한 후 submit 버튼을 클릭하면 POST 방식으로 전달된다. 그런데 어떤 사람이 브라우저에서 localhost:8000/new_comment/로 입력하는 경우도 생각해야 한다. 이 경우는 POST가 아니라 GET 방식으로 서버에 요청하게 되므로 그냥 pk=10인 포스트의 페이지로 리다이렉트 되도록 했다.
+            comment_form = CommentForm(request.POST)  # 정상적으로 폼을 작성하고 POST 방식으로 서버에 요청이 들어오면 POST 방식으로 들어온 정보를 CommentForm의 형태로 가져온다.
+            if comment_form.is_valid():  # 폼이 유효하게 작성되었다면 해당 내용으로 새로운 레코드를 만들어 데이터베이스에 저장한다. 이때 comment_form.save(commit=False)로 바로 저장하는 기능을 잠시 미루고 comment_form에 담긴 정보로 Comment 인스턴스만 가져온다. 이때 CommentForm은 content 필드의 내용만 담고 있으므로 post 필드는 pk로 가져온 포스트로 채우고, author 필드는 로그인한 사용자 정보로 채운다. 그 작업이 끝나면 저장한다.
+                comment = comment_form.save(commit=False)  # 
+                comment.post = post  # 위에서 pk로 찾아온 댓글을 달 포스트
+                comment.author = request.user  # 로그인 한 사용자
+                comment.save()  # 원하는 정보를 다 담았으니 저장
+                return redirect(comment.get_absolute_url())  # 마지막으로 comment의 URL로 리다이렉트 한다. 해당 포스트의 상세 페이지에서 이 댓글이 작성되어 있는 위치로 브라우저가 이동할것이다.
+        else:
+            return redirect(post.get_absolute_url())
+    else:
+        raise PermissionDenied
